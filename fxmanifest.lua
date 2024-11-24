@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'rdr3'
 rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aware my resources *will* become incompatible once RedM ships.'
 
-description 'Tobacco Seller with ox_target'
+description 'Contrband Seller with ox_target'
 
 shared_script '@ox_lib/init.lua'
 
