@@ -1,7 +1,4 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-
-
-
 local sellableItems = {
     {
         item = "joint",
@@ -29,7 +26,18 @@ local sellableItems = {
     }
 }
 
+-- Simplified function to check if entity is a valid human NPC
+local function IsValidHumanNPC(entity)
+    if not DoesEntityExist(entity) then return false end
+    if IsPedAPlayer(entity) then return false end
+    if IsEntityDead(entity) then return false end
+    return IsPedHuman(entity)
+end
+
 local function HandleNPCInteraction(entity, accepted)
+    -- Verify entity is still valid before proceeding
+    if not IsValidHumanNPC(entity) then return end
+    
     -- Clear PED tasks and make them stop
     ClearPedTasks(entity)
     FreezeEntityPosition(entity, true)
@@ -73,8 +81,7 @@ local function HandleNPCInteraction(entity, accepted)
     FreezeEntityPosition(entity, false)
     -- Let NPC walk away
     TaskWanderStandard(entity, 10.0, 10)
-	TriggerServerEvent('rsg-lawman:server:lawmanAlert', "Suspicious activity reported nearby!", GetEntityCoords(PlayerPedId()))
-
+    TriggerServerEvent('rsg-lawman:server:lawmanAlert', "Suspicious activity reported nearby!", GetEntityCoords(PlayerPedId()))
 end
 
 -- Create target options for each item
@@ -85,11 +92,23 @@ for _, itemData in ipairs(sellableItems) do
         label = itemData.label,
         icon = itemData.icon,
         canInteract = function(entity)
-            if IsPedAPlayer(entity) or IsEntityDead(entity) then return false end
+            -- Add check for valid human NPC
+            if not IsValidHumanNPC(entity) then return false end
             local hasItem = RSGCore.Functions.HasItem(itemData.item)
             return hasItem
         end,
         onSelect = function(data)
+            -- Double-check entity is still valid
+            if not IsValidHumanNPC(data.entity) then 
+                lib.notify({
+                    title = 'Invalid Target',
+                    description = 'You can only sell to people!',
+                    type = 'error',
+                    duration = 3000
+                })
+                return 
+            end
+            
             local accepted = math.random() < itemData.acceptChance
             
             -- Start interaction with NPC
